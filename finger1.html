@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finger Scan</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      position: relative;
+      display: inline-block;
+    }
+    img {
+      width: 400px;
+    }
+    .light-circle {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: transparent;
+      border: 2px solid #333;
+      cursor: pointer;
+    }
+    #scanMsg {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #444;
+    }
+    #nextBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      cursor: pointer;
+    }
+    #nextBtn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Touch and Hold Each Finger </h2>
+<div class="container">
+  <img src="images/12.jpg" alt="Hand Scan" />
+
+  <!-- Fingers -->
+  <div class="light-circle" id="light-Thumb" style="top:280px; left:20px;"></div>
+  <div class="light-circle" id="light-Index" style="top:30px; left:80px;"></div>
+  <div class="light-circle" id="light-Middle" style="top:10px; left:180px;"></div>
+  <div class="light-circle" id="light-Ring" style="top:20px; left:260px;"></div>
+  <div class="light-circle" id="light-Pinky" style="top:70px; left:350px;"></div>
+</div>
+
+<div id="scanMsg">Click and hold a finger area.</div>
+<button id="nextBtn" onclick="nextStep()">Next</button>
+
+<script>
+  const fingers = ["Thumb", "Index", "Middle", "Ring", "Pinky"];
+  let currentFingerIndex = 0;
+  let holdTimer = null;
+
+  document.querySelectorAll('.light-circle').forEach(circle => {
+    const finger = circle.id.replace('light-', '');
+
+    const startHold = () => {
+      if (finger !== fingers[currentFingerIndex]) return;
+      holdTimer = setTimeout(() => {
+        circle.style.backgroundColor = "green";
+        document.getElementById("scanMsg").textContent = `${finger} scanned successfully!`;
+        currentFingerIndex++;
+        if (currentFingerIndex < fingers.length) {
+          document.getElementById("scanMsg").textContent += ` Now scan the ${fingers[currentFingerIndex]}.`;
+        } else {
+          document.getElementById("scanMsg").textContent += " All fingers scanned!";
+          document.getElementById("nextBtn").style.display = "inline-block";
+        }
+      }, 3000);
+    };
+
+    const cancelHold = () => {
+      if (finger !== fingers[currentFingerIndex]) return;
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+        if (circle.style.backgroundColor !== "green") {
+          circle.style.backgroundColor = "red";
+          document.getElementById("scanMsg").textContent = `Hold too short on ${finger}. Try again.`;
+          setTimeout(() => {
+            circle.style.backgroundColor = "transparent";
+          }, 1000);
+        }
+      }
+    };
+
+    // Mouse Events
+    circle.addEventListener('mousedown', startHold);
+    circle.addEventListener('mouseup', cancelHold);
+    circle.addEventListener('mouseleave', cancelHold);
+
+    // Touch Events
+    circle.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevents triggering mouse events
+      startHold();
+    }, { passive: false });
+
+    circle.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      cancelHold();
+    });
+    circle.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      cancelHold();
+    });
+  });
+
+  function nextStep() {
+    window.location.href = "approved.html";
+  }
+</script>
+
+</body>
+</html>

